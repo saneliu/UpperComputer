@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace TEST
+namespace OV7725调车上位机
 {
     static class Program
     {

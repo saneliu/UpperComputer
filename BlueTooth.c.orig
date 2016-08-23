@@ -69,7 +69,7 @@ void UpperComputer(uint8_t *usart_receive)
 
     if (USART_RX_STA & 0x8000)
     {
-        len = USART_RX_STA & 0x3fff; //得到此次接收到的数据长度
+			    len = USART_RX_STA & 0x3fff; //得到此次接收到的数据长度
         //检验第一位  确保数据正确
         if (USART_RX_BUF[0] == 0xff)
         {
@@ -179,16 +179,16 @@ void Send_Uint8_Data(uint8_t data, uint8_t type)
   */
 void Send_Float_Data(float data, uint8_t type)
 {
-    uint8_t SendData[7] = {0xff, type, 0x00, 0x00, 0x00, 0x0d, 0x0a};
-    if (data < 0)
-    {
-        SendData[2] = 0x01;
-        data = -data;
-    }
+    uint8_t SendData[7] = {0xff, type, 0x00,0x00, 0x00, 0x0d, 0x0a};
+		if(data<0)
+		{
+		SendData[2]=0x01;
+			data=-data;
+		}
     //temp_1整数部分  temp_2两位小数
     uint8_t temp_1, temp_2;
     temp_1 = (uint8_t)data;
-    SendData[2] = temp_1;
+		SendData[2] = temp_1;
     temp_2 = (uint8_t)(100 * (data - (float)temp_1));
     SendData[3] = temp_2;
 
@@ -211,12 +211,36 @@ void Send_Float_Data(float data, uint8_t type)
   */
 void Send_CCD_Data(uint8_t data[], uint8_t type)
 {
-    uint8_t temp_1 = 0x0f;
-    uint8_t temp_2[2] = {0x0d, 0x0a};
+	uint8_t temp_1=0x0f;
+	uint8_t temp_2[2]={0x0d,0x0a};
+	
     HAL_UART_Transmit(&huart1 , &temp_1, 1, 0xff);
-    HAL_UART_Transmit(&huart1 , &type, 1, 0xff);
+	  HAL_UART_Transmit(&huart1 , &type, 1, 0xff);
     HAL_UART_Transmit(&huart1 , data, 128, 0xffff);
-    HAL_UART_Transmit(&huart1 , temp_2, 2, 0xff);
+	  HAL_UART_Transmit(&huart1 , temp_2, 2, 0xff);
 }
 
+/**
+  * @brief  发CMOS数据据至上位机
+  * @param
+    * @arg  data  要发送的数据  128位数组
+    * @arg  type  发送数据类型
+	* @retval NONE
+  * @attention
+		通讯协议
+    * @arg  第一位  0x00  检验
+    * @arg  第二位  type  数据类型
+		* @arg  倒数第二位  0x0d  检验
+		* @arg  倒数第一位  0x0a  检验
+		* @arg  其余38400位数据位(320*240)  为了方便压缩一下每两行去一行
+  */
+void Send_CMOS_Data(uint8_t data[], uint8_t type)
+{
+	uint8_t temp_1=0x00;
+	uint8_t temp_2[2]={0x0d,0x0a};
+    HAL_UART_Transmit(&huart1 , &temp_1, 1, 0xff);
+		  HAL_UART_Transmit(&huart1 , &type, 1, 0xff);
+			HAL_UART_Transmit(&huart1 , data, 38400, 0xffff);
 
+	  HAL_UART_Transmit(&huart1 , temp_2, 2, 0xff);
+}

@@ -37,6 +37,7 @@ namespace OV7725调车上位机
         const byte TurnRight = 0x2F;
         const byte Firing = 0x30;
         const byte Misfire = 0x31;
+
         bool GoFlag = false;
         /**********接收数据类型****************/
         const byte Rec_CPUStatus = 0x32;
@@ -53,6 +54,9 @@ namespace OV7725调车上位机
         const byte Rec_Number4 = 0x3D;
         const byte Rec_Number5 = 0x3E;
         const byte Rec_Number6 = 0x3F;
+        const byte Rec_CCD1 = 0x40;
+        const byte Rec_CCD2 = 0x41;
+        const byte Rec_CMOS = 0x42;
         #endregion
        public Form1()
         {
@@ -63,22 +67,8 @@ namespace OV7725调车上位机
         #region  窗口初始化
         private void Form1_Load(object sender, EventArgs e)
         {
-            #region PID数据初始化
-            textBox1.Text = "0.0";
-            textBox2.Text = "0.0";
-            textBox3.Text = "0.0";
-            textBox4.Text = "0.0";
-            textBox5.Text = "0.0";
-            textBox6.Text = "0.0";
-            textBox7.Text = "0.0";
-            textBox8.Text = "0.0";
-            textBox9.Text = "0.0";
-            textBox10.Text = "0.0";
-            textBox11.Text = "0.0";
-            textBox12.Text = "0.0";
-            #endregion
             #region  波特率初始化
-            string[] BaudRate = { "9600", "115200" };
+            string[] BaudRate = { "9600", "115200","315200" };
             comboBox2.DropDownStyle = ComboBoxStyle.DropDownList;
             for (int i = 0; i < BaudRate.Length; i++)
             {
@@ -151,7 +141,7 @@ namespace OV7725调车上位机
                 }
             }
         #endregion
-            #region  接收数据显示
+        #region  接收数据显示
             if ((global.USART_RX_STA & 0x8000)!=0)
             {
                 int len;
@@ -159,13 +149,17 @@ namespace OV7725调车上位机
                 //检验第一位  确保数据正确
                 if (global.USART_RX_BUF[0] == 0xff)
                 {
-                    if (len == 4)
+                    if (len == 5)
                     {
-                        usart_temp = (float)(global.USART_RX_BUF[2]) + ((float)global.USART_RX_BUF[3]) / 100;
+                        usart_temp = (float)(global.USART_RX_BUF[3]) + ((float)global.USART_RX_BUF[4]) / 100;
+                        if (global.USART_RX_BUF[2] == 0x01)
+                        {
+                            usart_temp = -usart_temp;
+                        }
                     }
                     else if(len==3)
                     {
-                        usart_temp = (float)global.USART_RX_BUF[2];
+                        usart_temp = (float)global.USART_RX_BUF[3];
                     }
                     switch (global.USART_RX_BUF[1])
                     {
@@ -213,7 +207,35 @@ namespace OV7725调车上位机
                         break;
                     }
                 }
-            #endregion
+                //CCD
+                else if (global.USART_RX_BUF[0] == 0x0f)
+                {
+                    switch (global.USART_RX_BUF[1])
+                    {
+                        case Rec_CCD1:
+                            global.CCD1 = global.USART_RX_BUF ;
+                            break;
+                        case Rec_CCD2:
+                            global.CCD2 = global.USART_RX_BUF;
+                            break;
+                    }
+                }
+                //CMOS
+                else if (global.USART_RX_BUF[0] == 0x00)
+                {
+                    if(global.USART_RX_BUF[1]==Rec_CMOS)
+                    {
+                        global.CMOS = global.USART_RX_BUF;
+                        //Bitmap bm = new Bitmap(2, 2);    //这里调整点的大小  
+                        //bm.SetPixel(0, 0, color);      //设置点的颜色  
+                        //bm.SetPixel(0, 1, color);
+                        //bm.SetPixel(1, 0, color);
+                        //bm.SetPixel(1, 1, color);
+                        //Graphics g = Graphics.FromHwnd(this.panel1.Handle);    //画在哪里    
+                        //g.DrawImageUnscaled(bm, e.X, e.Y);      //具体坐标
+                    }
+                }
+       #endregion
                 global.USART_RX_STA = 0;
             }
         }
@@ -320,15 +342,15 @@ namespace OV7725调车上位机
             }
         }
         #endregion
-        #region  速度闭环PID
+        #region  速度闭环PID发送
         private void button3_Click(object sender, EventArgs e)
         {
             float f1=-1,f2=-1,f3=-1;
             try 
             {
-                f1 = float.Parse(textBox1.Text);
-                f2 = float.Parse(textBox2.Text);
-                f3 = float.Parse(textBox3.Text);
+                f1 = float.Parse(numericUpDown1.Text);
+                f2 = float.Parse(numericUpDown2.Text);
+                f3 = float.Parse(numericUpDown3.Text);
             }
             catch
             {
@@ -337,12 +359,9 @@ namespace OV7725调车上位机
 
             try
             {
-                if ((f1 >= 0) && (f2 >= 0) && (f3 >= 0))
-                {
                     SendData(f1, Speed_P);
                     SendData(f2, Speed_I);
                     SendData(f3, Speed_D);
-                }
             }
             catch
             {
@@ -350,15 +369,15 @@ namespace OV7725调车上位机
             }
         }
         #endregion
-        #region  位置开环PID
+        #region  位置开环PID发送
         private void button4_Click(object sender, EventArgs e)
         {
             float f1 = -1, f2 = -1, f3 = -1;
             try
             {
-                f1 = float.Parse(textBox6.Text);
-                f2 = float.Parse(textBox5.Text);
-                f3 = float.Parse(textBox4.Text);
+                f1 = float.Parse(numericUpDown4.Text);
+                f2 = float.Parse(numericUpDown5.Text);
+                f3 = float.Parse(numericUpDown6.Text);
             }
             catch
             {
@@ -367,12 +386,9 @@ namespace OV7725调车上位机
 
             try
             {
-                if ((f1 >= 0) && (f2 >= 0) && (f3 >= 0))
-                {
                     SendData(f1, Position_P);
                     SendData(f2, Position_I);
                     SendData(f3, Position_D);
-                }
             }
             catch
             {
@@ -380,15 +396,15 @@ namespace OV7725调车上位机
             }
         }
         #endregion
-        #region  舵机PID
+        #region  舵机PID发送
         private void button5_Click(object sender, EventArgs e)
         {
             float f1 = -1, f2 = -1, f3 = -1;
             try
             {
-                f1 = float.Parse(textBox9.Text);
-                f2 = float.Parse(textBox8.Text);
-                f3 = float.Parse(textBox7.Text);
+                f1 = float.Parse(numericUpDown7.Text);
+                f2 = float.Parse(numericUpDown8.Text);
+                f3 = float.Parse(numericUpDown9.Text);
             }
             catch
             {
@@ -397,12 +413,9 @@ namespace OV7725调车上位机
 
             try
             {
-                if ((f1 >= 0) && (f2 >= 0) && (f3 >= 0))
-                {
                     SendData(f1, Steer_P);
                     SendData(f2, Steer_I);
                     SendData(f3, Steer_D);
-                }
             }
             catch
             {
@@ -410,15 +423,15 @@ namespace OV7725调车上位机
             }
         }
         #endregion
-        #region 平衡PID
+        #region 平衡PID发送
         private void button6_Click(object sender, EventArgs e)
         {
             float f1 = -1, f2 = -1, f3 = -1;
             try
             {
-                f1 = float.Parse(textBox12.Text);
-                f2 = float.Parse(textBox11.Text);
-                f3 = float.Parse(textBox10.Text);
+                f1 = float.Parse(numericUpDown10.Text);
+                f2 = float.Parse(numericUpDown11.Text);
+                f3 = float.Parse(numericUpDown12.Text);
             }
             catch
             {
@@ -427,12 +440,9 @@ namespace OV7725调车上位机
 
             try
             {
-                if ((f1 >= 0) && (f2 >= 0) && (f3 >= 0))
-                {
                     SendData(f1, Balance_P);
                     SendData(f2, Balance_I);
                     SendData(f3, Balance_D);
-                }
             }
             catch
             {
@@ -440,31 +450,27 @@ namespace OV7725调车上位机
             }
         }
         #endregion
-        #region 向前
+        #region 前后左右开车停止信号发送
         private void button7_Click(object sender, EventArgs e)
         {
             SendData(Forward);
         }
-        #endregion
-        #region 向后
+
         private void button11_Click(object sender, EventArgs e)
         {
             SendData(Backward);
         }
-        #endregion
-        #region  向左
+
         private void button8_Click(object sender, EventArgs e)
         {
             SendData(TurnLeft);
         }
-        #endregion
-        #region 向右
+
         private void button10_Click(object sender, EventArgs e)
         {
             SendData(TurnRight);
         }
-        #endregion
-        #region  车启动停止
+
         private void button9_Click(object sender, EventArgs e)
         {
             if(GoFlag==false)
@@ -481,6 +487,300 @@ namespace OV7725调车上位机
             }
         }
         #endregion  
+        #region  单个PID数据发送
+        private void numericUpDown1_ValueChanged(object sender, EventArgs e)
+        {
+            float f1 = -1;
+            try
+            {
+                f1 = float.Parse(numericUpDown1.Text);
+            }
+            catch
+            {
+                MessageBox.Show("请输入0~255区间二位小数");
+            }
+
+            try
+            {
+                SendData(f1, Speed_P);
+            }
+            catch
+            {
+                MessageBox.Show("发送数据失败");
+            }
+        }
+
+        private void numericUpDown2_ValueChanged(object sender, EventArgs e)
+        {
+            float  f2 = -1;
+            try
+            {
+                f2 = float.Parse(numericUpDown2.Text);
+            }
+            catch
+            {
+                MessageBox.Show("请输入0~255区间二位小数");
+            }
+
+            try
+            {
+                SendData(f2, Speed_I);
+            }
+            catch
+            {
+                MessageBox.Show("发送数据失败");
+            }
+        }
+
+        private void numericUpDown3_ValueChanged(object sender, EventArgs e)
+        {
+            float  f3 = -1;
+            try
+            {
+                f3 = float.Parse(numericUpDown3.Text);
+            }
+            catch
+            {
+                MessageBox.Show("请输入0~255区间二位小数");
+            }
+
+            try
+            {
+                SendData(f3, Speed_D);
+            }
+            catch
+            {
+                MessageBox.Show("发送数据失败");
+            }
+        }
+
+        private void numericUpDown4_ValueChanged(object sender, EventArgs e)
+        {
+            float f1 = -1;
+            try
+            {
+                f1 = float.Parse(numericUpDown4.Text);
+            }
+            catch
+            {
+                MessageBox.Show("请输入0~255区间二位小数");
+            }
+
+            try
+            {
+                SendData(f1, Position_P);
+            }
+            catch
+            {
+                MessageBox.Show("发送数据失败");
+            }
+        }
+
+        private void numericUpDown5_ValueChanged(object sender, EventArgs e)
+        {
+            float  f2 = -1;
+            try
+            {
+                f2 = float.Parse(numericUpDown5.Text);
+            }
+            catch
+            {
+                MessageBox.Show("请输入0~255区间二位小数");
+            }
+
+            try
+            {
+                SendData(f2, Position_I);
+            }
+            catch
+            {
+                MessageBox.Show("发送数据失败");
+            }
+        }
+
+        private void numericUpDown6_ValueChanged(object sender, EventArgs e)
+        {
+            float  f3 = -1;
+            try
+            {
+                f3 = float.Parse(numericUpDown6.Text);
+            }
+            catch
+            {
+                MessageBox.Show("请输入0~255区间二位小数");
+            }
+
+            try
+            {
+                SendData(f3, Position_D);
+            }
+            catch
+            {
+                MessageBox.Show("发送数据失败");
+            }
+        }
+
+        private void numericUpDown7_ValueChanged(object sender, EventArgs e)
+        {
+            float f1 = -1;
+            try
+            {
+                f1 = float.Parse(numericUpDown7.Text);
+            }
+            catch
+            {
+                MessageBox.Show("请输入0~255区间二位小数");
+            }
+
+            try
+            {
+                SendData(f1, Steer_P);
+            }
+            catch
+            {
+                MessageBox.Show("发送数据失败");
+            }
+        }
+
+        private void numericUpDown8_ValueChanged(object sender, EventArgs e)
+        {
+            float f2 = -1;
+            try
+            {
+                f2 = float.Parse(numericUpDown8.Text);
+            }
+            catch
+            {
+                MessageBox.Show("请输入0~255区间二位小数");
+            }
+
+            try
+            {
+                SendData(f2, Steer_I);
+            }
+            catch
+            {
+                MessageBox.Show("发送数据失败");
+            }
+        }
+
+        private void numericUpDown9_ValueChanged(object sender, EventArgs e)
+        {
+            float  f3 = -1;
+            try
+            {
+                f3 = float.Parse(numericUpDown9.Text);
+            }
+            catch
+            {
+                MessageBox.Show("请输入0~255区间二位小数");
+            }
+
+            try
+            {
+                SendData(f3, Steer_D);
+            }
+            catch
+            {
+                MessageBox.Show("发送数据失败");
+            }
+        }
+
+        private void numericUpDown10_ValueChanged(object sender, EventArgs e)
+        {
+            float f1 = -1;
+            try
+            {
+                f1 = float.Parse(numericUpDown10.Text);
+            }
+            catch
+            {
+                MessageBox.Show("请输入0~255区间二位小数");
+            }
+
+            try
+            {
+                SendData(f1, Balance_P);
+            }
+            catch
+            {
+                MessageBox.Show("发送数据失败");
+            }
+        }
+
+        private void numericUpDown11_ValueChanged(object sender, EventArgs e)
+        {
+            float  f2 = -1;
+            try
+            {
+                f2 = float.Parse(numericUpDown11.Text);
+            }
+            catch
+            {
+                MessageBox.Show("请输入0~255区间二位小数");
+            }
+
+            try
+            {
+                SendData(f2, Balance_I);
+            }
+            catch
+            {
+                MessageBox.Show("发送数据失败");
+            }
+        }
+
+        private void numericUpDown12_ValueChanged(object sender, EventArgs e)
+        {
+            float f3 = -1;
+            try
+            {
+                f3 = float.Parse(numericUpDown12.Text);
+            }
+            catch
+            {
+                MessageBox.Show("请输入0~255区间二位小数");
+            }
+
+            try
+            {
+                SendData(f3, Balance_D);
+            }
+            catch
+            {
+                MessageBox.Show("发送数据失败");
+            }
+        }
+        #endregion
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            #region  CCD图像绘制
+            Graphics Draw_CCD1 =pictureBox1.CreateGraphics();
+            Graphics Draw_CCD2 = pictureBox2.CreateGraphics();
+            for (int i = 3; i < 130; i++)
+            {
+                Draw_CCD1.DrawLine(new Pen(Color.Red), 2 * (i - 1), 140 - (global.CCD1[i - 1]) / 2, 2 * i, 140 - (global.CCD1[i]) / 2);
+            }
+            for (int i = 3; i < 130; i++)
+            {
+                Draw_CCD2.DrawLine(new Pen(Color.Red), 2 * (i - 1), 140 - (global.CCD2[i - 1]) / 2, 2 * i, 140 - (global.CCD2[i]) / 2);
+            }
+            #endregion
+            #region  CMOS图像绘制
+            Graphics Draw_CMOS = pictureBox3.CreateGraphics();
+            for (int i = 2; i < 160*120+2; i++)
+            {
+                if(global.CMOS[i - 1] == 1)
+                {
+                    Draw_CMOS.FillEllipse(Brushes.Black, new Rectangle(2 * ((i - 2) % 160), 2 * (i - 2) / 160, 16, 16));
+                }
+
+            }
+
+            #endregion
+
+        }
 
     }
     #region 全局变量
@@ -494,6 +794,9 @@ namespace OV7725调车上位机
         //bit14，	接收到0x0d
         //bit13~0，	接收到的有效字节数目
         public static int USART_RX_STA=0;         		//接收状态标记
+        public static byte[] CCD1 = new byte[130];//CCD1数组.
+        public static byte[] CCD2 = new byte[130];//CCD2数组.
+        public static byte[] CMOS = new byte[76810];//CMOS数组.
     }  
     #endregion
 }

@@ -32,6 +32,9 @@ extern uint16_t USART_RX_STA;         		//接收状态标记
 #define Number4 0x3D
 #define Number5 0x3E
 #define Number6 0x3F
+#define CCD1 0x40
+#define CCD2 0x41
+#define CMOS 0x42
 /***************接收数据类型***************/
 #define  Rec_Balance_P 0x20
 #define  Rec_Balance_I 0x21
@@ -55,5 +58,6 @@ extern uint16_t USART_RX_STA;         		//接收状态标记
 void UpperComputer(uint8_t *usart_receive);
 void Send_Uint8_Data(uint8_t data, uint8_t type);
 void Send_Float_Data(float data, uint8_t type);
+void Send_CCD_Data(uint8_t data[], uint8_t type);
 
 #endif
