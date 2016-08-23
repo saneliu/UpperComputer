@@ -118,51 +118,45 @@ volatile uint8_t Ov7725_vsync;
  ************************************************/
 static void FIFO_GPIO_Config(void)
 {
-	    /* GPIO Ports Clock Enable */
-    __HAL_RCC_GPIOD_CLK_ENABLE();
-    __HAL_RCC_GPIOB_CLK_ENABLE();
-    __HAL_RCC_GPIOC_CLK_ENABLE();
-    __HAL_RCC_GPIOA_CLK_ENABLE();
-	
     GPIO_InitTypeDef GPIO_InitStructure;
 
-    GPIO_InitStructure.Mode  = GPIO_MODE_OUTPUT_PP;
-    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
+    GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_Out_PP;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 
     /*PD3(FIFO_WEN--FIFO写使能)*/
-//    macOV7725_WE_SCK_APBxClock_FUN ( macOV7725_WE_GPIO_CLK, ENABLE );
-    GPIO_InitStructure.Pin = macOV7725_WE_GPIO_PIN;
-    HAL_GPIO_Init(macOV7725_WE_GPIO_PORT, &GPIO_InitStructure);
+    macOV7725_WE_SCK_APBxClock_FUN ( macOV7725_WE_GPIO_CLK, ENABLE );
+    GPIO_InitStructure.GPIO_Pin = macOV7725_WE_GPIO_PIN;
+    GPIO_Init(macOV7725_WE_GPIO_PORT, &GPIO_InitStructure);
 
     /*PB5(FIFO_WRST--FIFO写复位)*/
-//    macOV7725_WRST_SCK_APBxClock_FUN ( macOV7725_WRST_GPIO_CLK, ENABLE );
-    GPIO_InitStructure.Pin = macOV7725_WRST_GPIO_PIN;
-    HAL_GPIO_Init(macOV7725_WRST_GPIO_PORT, &GPIO_InitStructure);
+    macOV7725_WRST_SCK_APBxClock_FUN ( macOV7725_WRST_GPIO_CLK, ENABLE );
+    GPIO_InitStructure.GPIO_Pin = macOV7725_WRST_GPIO_PIN;
+    GPIO_Init(macOV7725_WRST_GPIO_PORT, &GPIO_InitStructure);
 
     /*PA2(FIFO_RRST--FIFO读复位) PA3(FIFO_OE--FIFO输出使能)*/
-//    macOV7725_RRST_SCK_APBxClock_FUN ( macOV7725_RRST_GPIO_CLK, ENABLE );
-    GPIO_InitStructure.Pin = macOV7725_RRST_GPIO_PIN;
-    HAL_GPIO_Init(macOV7725_RRST_GPIO_PORT, &GPIO_InitStructure);
+    macOV7725_RRST_SCK_APBxClock_FUN ( macOV7725_RRST_GPIO_CLK, ENABLE );
+    GPIO_InitStructure.GPIO_Pin = macOV7725_RRST_GPIO_PIN;
+    GPIO_Init(macOV7725_RRST_GPIO_PORT, &GPIO_InitStructure);
 
-//    macOV7725_CS_SCK_APBxClock_FUN ( macOV7725_CS_GPIO_CLK, ENABLE );
-    GPIO_InitStructure.Pin = macOV7725_CS_GPIO_PIN;
-    HAL_GPIO_Init(macOV7725_CS_GPIO_PORT, &GPIO_InitStructure);
+    macOV7725_CS_SCK_APBxClock_FUN ( macOV7725_CS_GPIO_CLK, ENABLE );
+    GPIO_InitStructure.GPIO_Pin = macOV7725_CS_GPIO_PIN;
+    GPIO_Init(macOV7725_CS_GPIO_PORT, &GPIO_InitStructure);
 
     /*PC5(FIFO_RCLK-FIFO读时钟)*/
-//    macOV7725_RCLK_SCK_APBxClock_FUN ( macOV7725_RCLK_GPIO_CLK, ENABLE );
-    GPIO_InitStructure.Pin = macOV7725_RCLK_GPIO_PIN;
-    HAL_GPIO_Init(macOV7725_RCLK_GPIO_PORT, &GPIO_InitStructure);
+    macOV7725_RCLK_SCK_APBxClock_FUN ( macOV7725_RCLK_GPIO_CLK, ENABLE );
+    GPIO_InitStructure.GPIO_Pin = macOV7725_RCLK_GPIO_PIN;
+    GPIO_Init(macOV7725_RCLK_GPIO_PORT, &GPIO_InitStructure);
 
     /*PB8-PB15(FIFO_DATA--FIFO输出数据)*/
-//    macOV7725_DATA_SCK_APBxClock_FUN ( macOV7725_DATA_GPIO_CLK, ENABLE );
-    GPIO_InitStructure.Pin = macOV7725_DATA_0_GPIO_PIN |
-                             macOV7725_DATA_1_GPIO_PIN | macOV7725_DATA_2_GPIO_PIN |
-                             macOV7725_DATA_3_GPIO_PIN |
-                             macOV7725_DATA_4_GPIO_PIN | macOV7725_DATA_5_GPIO_PIN |
-                             macOV7725_DATA_6_GPIO_PIN | macOV7725_DATA_7_GPIO_PIN;
-    GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
-    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
-    HAL_GPIO_Init(macOV7725_DATA_GPIO_PORT, &GPIO_InitStructure);
+    macOV7725_DATA_SCK_APBxClock_FUN ( macOV7725_DATA_GPIO_CLK, ENABLE );
+    GPIO_InitStructure.GPIO_Pin = macOV7725_DATA_0_GPIO_PIN |
+                                  macOV7725_DATA_1_GPIO_PIN | macOV7725_DATA_2_GPIO_PIN |
+                                  macOV7725_DATA_3_GPIO_PIN |
+                                  macOV7725_DATA_4_GPIO_PIN | macOV7725_DATA_5_GPIO_PIN |
+                                  macOV7725_DATA_6_GPIO_PIN | macOV7725_DATA_7_GPIO_PIN;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(macOV7725_DATA_GPIO_PORT, &GPIO_InitStructure);
 
 
     FIFO_CS_L();	  					/*拉低使FIFO输出使能*/
@@ -178,6 +172,69 @@ void Ov7725_GPIO_Config(void)
 }
 
 /************************************************
+ * 函数名：VSYNC_GPIO_Configuration
+ * 描述  ：OV7725 GPIO配置
+ * 输入  ：无
+ * 输出  ：无
+ * 注意  ：无
+ ************************************************/
+static void VSYNC_GPIO_Configuration(void)
+{
+    GPIO_InitTypeDef GPIO_InitStructure;
+
+
+    macOV7725_VSYNC_SCK_APBxClock_FUN ( macOV7725_VSYNC_GPIO_CLK,
+                                        ENABLE );	  /*PA0---VSYNC*/
+    GPIO_InitStructure.GPIO_Pin =  macOV7725_VSYNC_GPIO_PIN;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(macOV7725_VSYNC_GPIO_PORT, &GPIO_InitStructure);
+}
+
+/************************************************
+ * 函数名：VSYNC_NVIC_Configuration
+ * 描述  ：VSYNC中断配置
+ * 输入  ：无
+ * 输出  ：无
+ * 注意  ：无
+ ************************************************/
+static void VSYNC_NVIC_Configuration(void)
+{
+    NVIC_InitTypeDef NVIC_InitStructure;
+    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
+    NVIC_InitStructure.NVIC_IRQChannel = macOV7725_VSYNC_EXTI_IRQ;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 3;
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init(&NVIC_InitStructure);
+}
+
+/************************************************
+ * 函数名：VSYNC_EXTI_Configuration
+ * 描述  ：OV7725 VSYNC中断管脚配置
+ * 输入  ：无
+ * 输出  ：无
+ * 注意  ：无
+ ************************************************/
+/*               ___                            ___
+ * VSYNC:     __|   |__________________________|   |__
+ */
+static void VSYNC_EXTI_Configuration(void)
+{
+    EXTI_InitTypeDef EXTI_InitStructure;
+
+    GPIO_EXTILineConfig(macOV7725_VSYNC_EXTI_SOURCE_PORT,
+                        macOV7725_VSYNC_EXTI_SOURCE_PIN);
+    EXTI_InitStructure.EXTI_Line = macOV7725_VSYNC_EXTI_LINE;
+    EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+    //EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising ; /*上升沿触发*/
+    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling ;
+    EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+    EXTI_Init(&EXTI_InitStructure);
+    EXTI_GenerateSWInterrupt(macOV7725_VSYNC_EXTI_LINE);	/*中断挂到 EXTI_Line0  线*/
+}
+
+/************************************************
  * 函数名：VSYNC_Init
  * 描述  ：OV7725 VSYNC中断相关配置
  * 输入  ：无
@@ -186,18 +243,9 @@ void Ov7725_GPIO_Config(void)
  ************************************************/
 void VSYNC_Init(void)
 {
-    GPIO_InitTypeDef GPIO_InitStructure;
-
-
-//    macOV7725_VSYNC_SCK_APBxClock_FUN ( macOV7725_VSYNC_GPIO_CLK,
-//                                        ENABLE );	  /*PA0---VSYNC*/
-    GPIO_InitStructure.Mode = GPIO_MODE_IT_FALLING;    //下降沿触发
-    GPIO_InitStructure.Pull = GPIO_PULLUP;
-    GPIO_InitStructure.Pin =  macOV7725_VSYNC_GPIO_PIN;
-    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-    HAL_NVIC_SetPriority(macOV7725_VSYNC_EXTI_IRQ, 2, 0);
-    HAL_NVIC_EnableIRQ(macOV7725_VSYNC_EXTI_IRQ);
-    HAL_GPIO_Init(macOV7725_VSYNC_GPIO_PORT, &GPIO_InitStructure);
+    VSYNC_GPIO_Configuration();
+    VSYNC_EXTI_Configuration();
+    VSYNC_NVIC_Configuration();
 }
 
 /************************************************
@@ -260,11 +308,12 @@ ErrorStatus Ov7725_Init(void)
 void ImagDisp(void)
 {
     uint16_t Camera_Data;
-//	  uint8_t  light_send[160][120];
+    uint8_t  light[320][240];
+	  uint8_t  light_send[160][120];
     uint16_t i , j ;
-//    uint8_t R;
-//    uint8_t G;
-//    uint8_t B;
+    uint8_t R;
+    uint8_t G;
+    uint8_t B;
 //    USART1->DR = 0x00;
 //    USART1->DR = 0x42;
 //    while ((USART1->SR & 0X40) == 0);	//循环发送,直到发送完毕
@@ -304,32 +353,3 @@ void ImagDisp(void)
 //    USART1->DR = 0x0a;
 //    while ((USART1->SR & 0X40) == 0);	//循环发送,直到发送完毕
 }
-
-
-//中断服务程序中需要做的事情
-//在HAL库中所有的外部中断服务函数都会调用此函数
-//GPIO_Pin:中断引脚号
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-    HAL_Delay(100);      //消抖
-    switch (GPIO_Pin)
-    {
-        case GPIO_PIN_3:
-            if ( Ov7725_vsync == 0 )
-            {
-                FIFO_WRST_L(); 	                      //拉低使FIFO写(数据from摄像头)指针复位
-                FIFO_WE_H();	                        //拉高使FIFO写允许
-
-                Ov7725_vsync = 1;
-                FIFO_WE_H();                          //使FIFO写允许
-                FIFO_WRST_H();                        //允许使FIFO写(数据from摄像头)指针运动
-            }
-            else if ( Ov7725_vsync == 1 )
-            {
-                FIFO_WE_L();                          //拉低使FIFO写暂停
-                Ov7725_vsync = 2;
-            }
-            break;
-    }
-}
-

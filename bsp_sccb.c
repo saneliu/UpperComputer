@@ -15,15 +15,15 @@ void SCCB_GPIO_Config(void)
 	
 	
   /* SCL(PC6)°¢SDA(PC7)π‹Ω≈≈‰÷√ */
-	//macOV7725_SIO_C_SCK_APBxClock_FUN ( macOV7725_SIO_C_GPIO_CLK, ENABLE );
-  GPIO_InitStructure.Pin =  macOV7725_SIO_C_GPIO_PIN ;
-  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_OD;  
-  HAL_GPIO_Init(macOV7725_SIO_C_GPIO_PORT, &GPIO_InitStructure);
+	macOV7725_SIO_C_SCK_APBxClock_FUN ( macOV7725_SIO_C_GPIO_CLK, ENABLE );
+  GPIO_InitStructure.GPIO_Pin =  macOV7725_SIO_C_GPIO_PIN ;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;  
+  GPIO_Init(macOV7725_SIO_C_GPIO_PORT, &GPIO_InitStructure);
 	
-//	macOV7725_SIO_D_SCK_APBxClock_FUN ( macOV7725_SIO_D_GPIO_CLK, ENABLE );
-  GPIO_InitStructure.Pin =  macOV7725_SIO_D_GPIO_PIN ;
-  HAL_GPIO_Init(macOV7725_SIO_D_GPIO_PORT, &GPIO_InitStructure);
+	macOV7725_SIO_D_SCK_APBxClock_FUN ( macOV7725_SIO_D_GPIO_CLK, ENABLE );
+  GPIO_InitStructure.GPIO_Pin =  macOV7725_SIO_D_GPIO_PIN ;
+  GPIO_Init(macOV7725_SIO_D_GPIO_PORT, &GPIO_InitStructure);
 	
 }
 
